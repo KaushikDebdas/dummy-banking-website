@@ -74,7 +74,8 @@ roles, forms, tables, drag-and-drop, uploads, downloads and sessions. Nobody nee
 3. Open the **Actions** tab: the *Deploy to GitHub Pages* workflow builds and publishes the site (about 1–2 minutes).
 4. The site is live at `https://<your-username>.github.io/<repo>/` (the link is also shown in the workflow run).
 
-Every later push to `main` redeploys automatically. The workflow is in `.github/workflows/deploy.yml`; it builds
+Every later change to `master` (a push or a merged pull request from `dev` — see
+[Working with a dev branch](#working-with-a-dev-branch)) redeploys automatically. The workflow is in `.github/workflows/deploy.yml`; it builds
 with `BASE_PATH=<repo name>` so all links work under the `/<repo>/` sub-path, and adds a `404.html` copy of the app
 so deep links such as `/<repo>/customers/CUS-DHK-000002` and page refreshes work.
 
@@ -353,13 +354,46 @@ The repository is ready to publish: `node_modules/` and `dist/` are ignored, so 
 git init
 git add .
 git commit -m "KD Demo Bank - frontend-only banking app for testing practice"
-git branch -M main
+git branch -M master
 git remote add origin https://github.com/<your-username>/<your-repo>.git
-git push -u origin main
+git push -u origin master
 ```
 
 Then enable GitHub Pages once (**Settings → Pages → Source: GitHub Actions**) to get the online version — see
 [Use it online](#use-it-online-github-pages). Anyone can use the online link directly, or clone the repository and run
 `npm install` and `npm run dev`.
+
+### Working with a `dev` branch
+
+`master` is the live website; day-to-day work happens on `dev`:
+
+```
+dev  ──(push: build check)──►  Pull Request  ──(merge)──►  master  ──►  website is published
+```
+
+```bash
+git checkout dev                 # switch to the dev branch (create it once with: git checkout -b dev)
+# ... make changes ...
+git add .
+git commit -m "Describe your change"
+git push                         # first time: git push -u origin dev
+```
+
+Then on GitHub: **Pull requests → New pull request → base: `master` ← compare: `dev` → Create pull request**.
+Wait for the green ✔ from the *Build check* workflow, then click **Merge pull request**. The *Deploy to GitHub
+Pages* workflow publishes the new version about 1–2 minutes later. Afterwards update your local copy:
+
+```bash
+git checkout master && git pull && git checkout dev && git merge master
+```
+
+| Workflow file | Runs when | What it does |
+|---|---|---|
+| `.github/workflows/ci.yml` | push to `dev`, pull request into `master` | Type-checks and builds; a red ✘ means the change is broken |
+| `.github/workflows/deploy.yml` | push/merge to `master` (or run manually) | Builds and publishes the website |
+
+Optional safety net: **Settings → Branches → Add branch protection rule** for `master` → tick *Require a pull request
+before merging* and *Require status checks to pass* (select **build**). Then nothing reaches the live site without a
+passing pull request.
 
 > This is a training simulator. Names, NIDs and balances are fictitious and no real money is involved.

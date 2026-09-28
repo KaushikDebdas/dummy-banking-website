@@ -1,10 +1,11 @@
-# Builds the app and publishes it to GitHub Pages on every push to main.
+# Builds the app and publishes it to GitHub Pages whenever master changes
+# (a direct push or a merged pull request from the dev branch).
 # One-time setup: repository Settings -> Pages -> Build and deployment -> Source: "GitHub Actions".
 name: Deploy to GitHub Pages
 
 on:
   push:
-    branches: [main]
+    branches: [master]
   workflow_dispatch:
 
 permissions:

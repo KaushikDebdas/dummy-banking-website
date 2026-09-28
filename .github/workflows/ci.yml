@@ -1,0 +1,29 @@
+# Checks that the app type-checks and builds.
+# Runs on every push to dev and on every pull request into master, so a broken
+# change shows a red cross on the pull request before it can reach the live site.
+name: Build check
+
+on:
+  push:
+    branches: [dev]
+  pull_request:
+    branches: [master]
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      - name: Type-check and build
+        run: npm run build
