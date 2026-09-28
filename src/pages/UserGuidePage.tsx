@@ -52,7 +52,7 @@ const PRACTICE_MAP: [string, string, string][] = [
   ['Tables', 'Right-click context menu', 'Customers and Deposit Accounts rows'],
   ['Interactive UI', 'Modal and confirmation dialogs', 'Logout, approvals, freeze, reversal, maturity processing'],
   ['Interactive UI', 'Tooltips (hover / focus)', '(i) icons next to labels, KYC badges in the customer list, collapsed sidebar icons'],
-  ['Interactive UI', 'Popovers', 'Notifications bell 🔔 and user menu (initials) in the top bar'],
+  ['Interactive UI', 'Popovers', 'Notifications bell 🔔 (unread badge, item counts, "N new" pills, links to the right tab) and user menu (initials) in the top bar'],
   ['Interactive UI', 'Hover card (appears after 0.4 s)', 'Customer ID links in the Deposit Accounts table'],
   ['Interactive UI', 'Tabs', 'Teller, Approvals, Reports, Audit Logs'],
   ['Interactive UI', 'Accordions', 'EMI Calculator (schedule / formula), this FAQ'],
@@ -359,7 +359,7 @@ export function UserGuidePage() {
             <H3>Other helpers</H3>
             <Bullets
               items={[
-                <>The <B>🔔 bell</B> lists items that need your attention; the <B>initials</B> button opens your user menu.</>,
+                <>The <B>🔔 bell</B> lists all pending work you can act on (it stays until the work is handled). Its red number counts only <B>new</B> items and clears when you open the bell; new work raises it again. Each line opens the right tab, e.g. Approvals → Transactions. The <B>initials</B> button opens your user menu.</>,
                 <>Right-click a row in Customers or Deposit Accounts for a context menu; double-click a row to open it.</>,
                 <>The <B>⏱ timer</B> in the top bar shows how long until you are logged out for inactivity. Change it in <B>Profile → Session Settings</B>.</>,
               ]}
@@ -390,6 +390,7 @@ export function UserGuidePage() {
                   title: 'Do I need to install anything?',
                   content: <>No. If the app is published on GitHub Pages, open its link in any modern browser. To run it on your own computer instead, clone the repository and run npm install and npm run dev.</>,
                 },
+                { id: 'bell-zero', title: 'Why did the bell number go to 0 but the list still shows items?', content: <>The red number counts only new items you have not seen yet, and opening the bell marks them as seen. The list keeps showing all pending work until it is handled (approved, verified or processed). Items you created yourself are not listed, because you cannot approve your own work.</> },
                 { id: 'approve-own', title: 'Why can I not approve an account I created?', content: <>Maker-checker: the person who creates a record cannot approve it. Log in as another user with approval rights (e.g. a Branch Manager).</> },
                 { id: 'not-approved', title: 'The approval fails with "KYC must be Verified". What do I do?', content: <>Verify the customer's KYC first (Approvals → KYC Verification, or Verify KYC on the customer page), then approve the account or loan.</> },
                 { id: 'cannot-see', title: 'I cannot see a customer that exists.', content: <>Branch users only see their own branch. Log in as admin or auditor to see all branches.</> },

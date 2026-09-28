@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { useCurrentUser } from '../auth/AuthContext';
 import { canAccessBranch } from '../auth/permissions';
 import { DataTable } from '../components/table/DataTable';
@@ -37,7 +38,10 @@ interface OverdueRow {
 export function ReportsPage() {
   const user = useCurrentUser();
   const { state } = useStore();
-  const [tab, setTab] = useState<Tab>('portfolio');
+  // Active tab lives in the URL (?tab=portfolio|overdue|maturity|kyc|activity).
+  const [params, setParams] = useSearchParams();
+  const tab: Tab = TABS.find((t) => t.key === params.get('tab'))?.key ?? 'portfolio';
+  const setTab = (t: Tab) => setParams({ tab: t }, { replace: true });
   const [from, setFrom] = useState(addDays(today(), -90));
   const [to, setTo] = useState(today());
 

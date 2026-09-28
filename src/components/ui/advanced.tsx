@@ -412,9 +412,38 @@ export function InfoTip({ id, text }: { id: string; text: ReactNode }) {
 
 // ================================================================== Popover
 /** Click-to-open panel. Test ids: `<id>-trigger`, `<id>-panel`. Closes on outside click or Escape. */
-export function Popover({ id, trigger, triggerClassName, label, children, align = 'right' }: { id: string; trigger: ReactNode; triggerClassName?: string; label: string; children: (close: () => void) => ReactNode; align?: 'left' | 'right' }) {
-  const [open, setOpen] = useState(false);
+export function Popover({
+  id,
+  trigger,
+  triggerClassName,
+  label,
+  children,
+  align = 'right',
+  onOpenChange,
+}: {
+  id: string;
+  trigger: ReactNode;
+  triggerClassName?: string;
+  label: string;
+  children: (close: () => void) => ReactNode;
+  align?: 'left' | 'right';
+  /** Called whenever the panel opens or closes (click, Escape, outside click, close()). */
+  onOpenChange?: (open: boolean) => void;
+}) {
+  const [open, setOpenState] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
+  const openRef = useRef(false);
+  const onOpenChangeRef = useRef(onOpenChange);
+  onOpenChangeRef.current = onOpenChange;
+  // Notify synchronously (same event as the click/key), so the parent's state updates render
+  // together with the panel instead of one frame later.
+  const setOpen = (next: boolean | ((o: boolean) => boolean)) => {
+    const value = typeof next === 'function' ? next(openRef.current) : next;
+    if (value === openRef.current) return;
+    openRef.current = value;
+    onOpenChangeRef.current?.(value);
+    setOpenState(value);
+  };
   useEffect(() => {
     if (!open) return;
     const onDown = (e: MouseEvent) => !ref.current?.contains(e.target as Node) && setOpen(false);
