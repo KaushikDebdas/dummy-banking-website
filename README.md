@@ -263,6 +263,8 @@ Every common web UI element and interaction type appears in a realistic banking 
 | Slider | range `<id>-slider` synchronised with number input `<id>` |
 | Tooltip / info icon | trigger `<id>-info`, tooltip `<id>-tooltip` (`role="tooltip"`) |
 | Popover / accordion | `<id>-trigger` (`aria-expanded`) and `<id>-panel` |
+| Notifications bell | `notifications-trigger` (name `Notifications (N new)`), badge `notifications-count` (`data-count` = unseen items, hidden when 0), `notifications-panel`, `notifications-total` (`data-count` = all pending), lines `notification-item-<kyc\|deposits\|loans\|withdrawals\|overdue\|matured>` (`data-count`, `data-new`), pills `notification-new-<key>` |
+| Tabs in the URL | `/approvals?tab=kyc\|deposits\|loans\|transactions`, `/reports?tab=portfolio\|overdue\|maturity\|kyc\|activity` |
 | Drag-and-drop | cards `pipeline-card-<loan no>`, columns `pipeline-column-<status>` (`locator.drag_to(...)`) |
 | Session | `session-timer`, `session-warning-modal`, `session-countdown`, `session-stay-btn`, `login-session-expired` |
 | Quick search | `command-palette-btn` or Ctrl+K, `command-palette-input`, options `command-option-<key>` |

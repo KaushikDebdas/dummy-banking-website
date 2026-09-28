@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { useAuth, useCurrentUser } from '../auth/AuthContext';
 import type { Permission } from '../auth/permissions';
 import { DataTable } from '../components/table/DataTable';
@@ -35,7 +35,11 @@ export function ApprovalsPage() {
     { key: 'transactions', label: 'Transactions', count: txns.length, perm: 'txn.approve' },
   ];
   const allowedTabs = tabs.filter((t) => can(t.perm));
-  const [tab, setTab] = useState<Tab>(allowedTabs[0]?.key ?? 'kyc');
+  // Active tab lives in the URL (?tab=kyc|deposits|loans|transactions) so it can be linked to and survives a refresh.
+  const [params, setParams] = useSearchParams();
+  const requested = params.get('tab');
+  const tab: Tab = allowedTabs.find((t) => t.key === requested)?.key ?? allowedTabs[0]?.key ?? 'kyc';
+  const setTab = (t: Tab) => setParams({ tab: t }, { replace: true });
 
   const rejectWithRemarks = async (title: string, message: string) =>
     confirm({ title, message, confirmLabel: 'Reject', variant: 'danger', remarks: true, remarksRequired: true });

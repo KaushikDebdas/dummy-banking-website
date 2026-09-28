@@ -306,46 +306,111 @@ export function Breadcrumbs() {
 }
 
 // ================================================================== notifications popover
+/**
+ * "Hybrid" notifications:
+ * - The list shows ALL pending work the user can act on (it shrinks only when work is handled).
+ * - The red badge counts only NEW items the user has not seen yet; opening the bell marks them as seen.
+ * Seen task ids are kept per user in localStorage (a per-browser convenience, not part of the bank data).
+ */
+const SEEN_PREFIX = 'demobank:notifications-seen:';
+
+function readSeen(username: string): Set<string> {
+  try {
+    const raw = localStorage.getItem(SEEN_PREFIX + username);
+    const ids = raw ? (JSON.parse(raw) as unknown) : [];
+    return new Set(Array.isArray(ids) ? ids.map(String) : []);
+  } catch {
+    return new Set();
+  }
+}
+
+function writeSeen(username: string, ids: string[]) {
+  try {
+    localStorage.setItem(SEEN_PREFIX + username, JSON.stringify(ids));
+  } catch {
+    /* storage unavailable */
+  }
+}
+
+interface NotificationLine {
+  key: string;
+  ids: string[];
+  text: string;
+  to: string;
+}
+
 export function NotificationsPopover() {
   const user = useCurrentUser();
   const { can } = useAuth();
   const { state } = useStore();
-  const customers = visibleCustomers(state, user);
-  const deposits = visibleDeposits(state, user);
-  const loans = visibleLoans(state, user);
-  const txns = visibleTransactions(state, user);
+  const me = user.username;
 
-  const items: { key: string; text: string; to: string; show: boolean }[] = [
-    { key: 'kyc', text: `${customers.filter((c) => c.kycStatus === 'Pending').length} customer(s) waiting for KYC verification`, to: '/approvals', show: can('kyc.verify') && customers.some((c) => c.kycStatus === 'Pending') },
-    { key: 'deposits', text: `${deposits.filter((d) => d.status === 'Pending Approval').length} deposit account(s) pending approval`, to: '/approvals', show: can('deposit.approve') && deposits.some((d) => d.status === 'Pending Approval') },
-    { key: 'loans', text: `${loans.filter((l) => l.status === 'Applied').length} loan application(s) waiting for approval`, to: '/approvals', show: can('loan.approve') && loans.some((l) => l.status === 'Applied') },
-    { key: 'withdrawals', text: `${txns.filter((t) => t.status === 'Pending Approval').length} large withdrawal(s) pending approval`, to: '/approvals', show: can('txn.approve') && txns.some((t) => t.status === 'Pending Approval') },
-    {
-      key: 'overdue',
-      text: `${loans.filter((l) => l.status === 'Active' && l.schedule.some((i) => installmentStatus(i) === 'Overdue')).length} active loan(s) have overdue installments`,
-      to: can('report.view') ? '/reports' : '/loans',
-      show: loans.some((l) => l.status === 'Active' && l.schedule.some((i) => installmentStatus(i) === 'Overdue')),
-    },
-    {
-      key: 'matured',
-      text: `${deposits.filter((d) => d.status === 'Active' && d.maturityDate && d.maturityDate <= today()).length} term deposit(s) matured and awaiting processing`,
-      to: can('report.view') ? '/reports' : '/deposits',
-      show: deposits.some((d) => d.status === 'Active' && d.maturityDate && d.maturityDate <= today()),
-    },
-  ];
-  const visible = items.filter((i) => i.show);
+  const lines = useMemo<NotificationLine[]>(() => {
+    const customers = visibleCustomers(state, user);
+    const deposits = visibleDeposits(state, user);
+    const loans = visibleLoans(state, user);
+    const txns = visibleTransactions(state, user);
+    const out: NotificationLine[] = [];
+    // Approval work: only records the user did NOT create (maker-checker), so they can actually act on them.
+    if (can('kyc.verify')) {
+      const ids = customers.filter((c) => c.kycStatus === 'Pending' && c.createdBy !== me).map((c) => `kyc:${c.customerId}`);
+      out.push({ key: 'kyc', ids, text: `${ids.length} customer(s) waiting for KYC verification`, to: '/approvals?tab=kyc' });
+    }
+    if (can('deposit.approve')) {
+      const ids = deposits.filter((d) => d.status === 'Pending Approval' && d.createdBy !== me).map((d) => `deposit:${d.accountNo}`);
+      out.push({ key: 'deposits', ids, text: `${ids.length} deposit account(s) pending approval`, to: '/approvals?tab=deposits' });
+    }
+    if (can('loan.approve') || can('loan.disburse')) {
+      const toApprove = can('loan.approve') ? loans.filter((l) => l.status === 'Applied' && l.createdBy !== me).map((l) => `loan:${l.loanAccountNo}`) : [];
+      const toDisburse = can('loan.disburse') ? loans.filter((l) => l.status === 'Approved').map((l) => `disburse:${l.loanAccountNo}`) : [];
+      const parts = [toApprove.length && `${toApprove.length} loan application(s) to approve`, toDisburse.length && `${toDisburse.length} approved loan(s) to disburse`].filter(Boolean);
+      out.push({ key: 'loans', ids: [...toApprove, ...toDisburse], text: parts.join(' · '), to: '/approvals?tab=loans' });
+    }
+    if (can('txn.approve')) {
+      const ids = txns.filter((t) => t.status === 'Pending Approval' && t.createdBy !== me).map((t) => `txn:${t.txnId}`);
+      out.push({ key: 'withdrawals', ids, text: `${ids.length} large withdrawal(s) pending approval`, to: '/approvals?tab=transactions' });
+    }
+    // Information for everyone in scope.
+    const overdue = loans.filter((l) => l.status === 'Active' && l.schedule.some((i) => installmentStatus(i) === 'Overdue')).map((l) => `overdue:${l.loanAccountNo}`);
+    out.push({ key: 'overdue', ids: overdue, text: `${overdue.length} active loan(s) have overdue installments`, to: can('report.view') ? '/reports?tab=overdue' : '/loans' });
+    const matured = deposits.filter((d) => d.status === 'Active' && d.maturityDate && d.maturityDate <= today()).map((d) => `matured:${d.accountNo}`);
+    out.push({ key: 'matured', ids: matured, text: `${matured.length} term deposit(s) matured and awaiting processing`, to: can('report.view') ? '/reports?tab=maturity' : '/deposits' });
+    return out.filter((l) => l.ids.length > 0);
+  }, [state, user, can, me]);
+
+  const pendingIds = useMemo(() => lines.flatMap((l) => l.ids), [lines]);
+  const [seen, setSeen] = useState<Set<string>>(() => readSeen(me));
+  const [newAtOpen, setNewAtOpen] = useState<Set<string>>(new Set());
+  useEffect(() => setSeen(readSeen(me)), [me]);
+
+  const unseen = pendingIds.filter((id) => !seen.has(id));
+  const total = pendingIds.length;
+
+  const onOpenChange = (open: boolean) => {
+    if (!open) return;
+    // Remember what was new for the "N new" pills, then mark everything currently listed as seen.
+    setNewAtOpen(new Set(unseen));
+    const next = new Set(pendingIds);
+    writeSeen(me, [...next]);
+    setSeen(next);
+  };
 
   return (
     <Popover
       id="notifications"
-      label="Notifications"
+      label={unseen.length ? `Notifications (${unseen.length} new)` : 'Notifications'}
+      onOpenChange={onOpenChange}
       triggerClassName="relative rounded-md p-2 text-slate-600 hover:bg-slate-100"
       trigger={
         <>
           <span aria-hidden="true">🔔</span>
-          {visible.length > 0 && (
-            <span className="absolute -right-0.5 -top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-rose-600 px-1 text-[10px] font-bold text-white" data-testid="notifications-count" data-count={visible.length}>
-              {visible.length}
+          {unseen.length > 0 && (
+            <span
+              className="absolute -right-0.5 -top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-rose-600 px-1 text-[10px] font-bold text-white"
+              data-testid="notifications-count"
+              data-count={unseen.length}
+            >
+              {unseen.length > 99 ? '99+' : unseen.length}
             </span>
           )}
         </>
@@ -353,22 +418,43 @@ export function NotificationsPopover() {
     >
       {(close) => (
         <div>
-          <div className="border-b border-slate-100 px-4 py-2 text-sm font-semibold text-slate-800">Notifications</div>
-          {visible.length === 0 ? (
+          <div className="flex items-center justify-between border-b border-slate-100 px-4 py-2 text-sm">
+            <span className="font-semibold text-slate-800">Notifications</span>
+            <span className="text-xs text-slate-500" data-testid="notifications-total" data-count={total}>
+              {total} pending
+            </span>
+          </div>
+          {lines.length === 0 ? (
             <p className="px-4 py-6 text-center text-sm text-slate-500" data-testid="notifications-empty">
               You're all caught up.
             </p>
           ) : (
             <ul className="max-h-80 overflow-y-auto py-1">
-              {visible.map((n) => (
-                <li key={n.key}>
-                  <Link to={n.to} onClick={close} data-testid={`notification-item-${n.key}`} className="block px-4 py-2 text-sm text-slate-700 hover:bg-slate-50">
-                    {n.text}
-                  </Link>
-                </li>
-              ))}
+              {lines.map((n) => {
+                const fresh = n.ids.filter((id) => newAtOpen.has(id)).length;
+                return (
+                  <li key={n.key}>
+                    <Link
+                      to={n.to}
+                      onClick={close}
+                      data-testid={`notification-item-${n.key}`}
+                      data-count={n.ids.length}
+                      data-new={fresh}
+                      className={cx('flex items-start justify-between gap-3 px-4 py-2 text-sm hover:bg-slate-50', fresh ? 'font-medium text-slate-900' : 'text-slate-700')}
+                    >
+                      <span>{n.text}</span>
+                      {fresh > 0 && (
+                        <span className="shrink-0 rounded-full bg-rose-100 px-2 py-0.5 text-[11px] font-semibold text-rose-700" data-testid={`notification-new-${n.key}`}>
+                          {fresh} new
+                        </span>
+                      )}
+                    </Link>
+                  </li>
+                );
+              })}
             </ul>
           )}
+          <p className="border-t border-slate-100 px-4 py-2 text-[11px] text-slate-500">The badge shows new items only. This list keeps all pending work until it is handled.</p>
         </div>
       )}
     </Popover>
