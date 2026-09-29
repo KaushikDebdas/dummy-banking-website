@@ -115,7 +115,7 @@ export function UserGuidePage() {
           <LogoMark size={36} />
           <div className="flex-1">
             <h1 className="text-base font-semibold text-slate-900" data-testid="page-title">
-              KD Demo Bank — User Guide
+              QA Demo Bank — User Guide
             </h1>
             <p className="text-xs text-slate-500">How to use the core banking simulator</p>
           </div>
@@ -147,7 +147,7 @@ export function UserGuidePage() {
 
         <main className="flex min-w-0 flex-col gap-6">
           <Section id="quick-start" title="1. Quick Start">
-            <p>KD Demo Bank is a practice core banking system. Everything runs in your browser — there is no server and no real money. A typical first session:</p>
+            <p>QA Demo Bank is a practice core banking system. Everything runs in your browser — there is no server and no real money. A typical first session:</p>
             <Steps
               items={[
                 <>Log in as <Code>cso.dhaka</Code> and create a customer (Customer Management → <B>+ New Customer</B>).</>,

@@ -148,7 +148,7 @@ export function AppLayout() {
           <LogoMark size={34} />
           <div className={cx(collapsed && 'lg:hidden')}>
             <div className="text-sm font-semibold tracking-tight text-white" data-testid="app-name">
-              KD <span className="text-teal-300">Demo Bank</span>
+              QA <span className="text-teal-300">Demo Bank</span>
             </div>
             <div className="text-[11px] text-slate-400">Core Banking Simulator</div>
           </div>
