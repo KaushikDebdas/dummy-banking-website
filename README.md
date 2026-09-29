@@ -1,8 +1,8 @@
 <p align="center">
-  <img src="public/favicon.svg" alt="KD Demo Bank logo" width="96" height="96" />
+  <img src="public/favicon.svg" alt="QA Demo Bank logo" width="96" height="96" />
 </p>
 
-# KD Demo Bank — Dummy Core Banking System for Playwright Practice
+# QA Demo Bank — Dummy Core Banking System for Playwright Practice
 
 A realistic, **frontend-only** mini core banking system built for practising manual testing, test-case writing and
 UI automation (for example with Playwright). There is no backend, database or API: all data and business rules live in the

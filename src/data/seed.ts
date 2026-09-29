@@ -28,24 +28,24 @@ import { makeAuditId, makeCustomerId, makeDepositNo, makeLoanNo, makeTxnId, padN
 import { calculateInstallment, generateSchedule, numberOfInstallments } from '../lib/loanCalc';
 import { BRANCH_CODES, DEPOSIT_PRODUCTS, LOAN_PRODUCTS } from './reference';
 
-export const STATE_VERSION = 2;
+export const STATE_VERSION = 3;
 /** Seed transactions are generated up to this date. */
 export const SEED_CUTOFF = '2026-06-30';
 
 // ---------------------------------------------------------------- users
 const USERS: Omit<User, 'failedAttempts' | 'createdAt'>[] = [
-  { username: 'admin', password: 'Admin@123', fullName: 'Rahim Uddin', role: 'ADMIN', branch: 'ALL', email: 'admin@kddemobank.test', status: 'Active' },
-  { username: 'manager.dhaka', password: 'Manager@123', fullName: 'Farhana Islam', role: 'BRANCH_MANAGER', branch: 'DHK', email: 'manager.dhaka@kddemobank.test', status: 'Active' },
-  { username: 'manager.ctg', password: 'Manager@123', fullName: 'Tanvir Hossain', role: 'BRANCH_MANAGER', branch: 'CTG', email: 'manager.ctg@kddemobank.test', status: 'Active' },
-  { username: 'manager.sylhet', password: 'Manager@123', fullName: 'Nusrat Jahan', role: 'BRANCH_MANAGER', branch: 'SYL', email: 'manager.sylhet@kddemobank.test', status: 'Active' },
-  { username: 'cso.dhaka', password: 'Cso@123', fullName: 'Sabbir Ahmed', role: 'CSO', branch: 'DHK', email: 'cso.dhaka@kddemobank.test', status: 'Active' },
-  { username: 'cso.ctg', password: 'Cso@123', fullName: 'Mitu Akter', role: 'CSO', branch: 'CTG', email: 'cso.ctg@kddemobank.test', status: 'Active' },
-  { username: 'loan.dhaka', password: 'Loan@123', fullName: 'Imran Kabir', role: 'LOAN_OFFICER', branch: 'DHK', email: 'loan.dhaka@kddemobank.test', status: 'Active' },
-  { username: 'loan.ctg', password: 'Loan@123', fullName: 'Arif Chowdhury', role: 'LOAN_OFFICER', branch: 'CTG', email: 'loan.ctg@kddemobank.test', status: 'Active' },
-  { username: 'teller.dhaka', password: 'Teller@123', fullName: 'Shirin Sultana', role: 'TELLER', branch: 'DHK', email: 'teller.dhaka@kddemobank.test', status: 'Active' },
-  { username: 'teller.sylhet', password: 'Teller@123', fullName: 'Kamal Uddin', role: 'TELLER', branch: 'SYL', email: 'teller.sylhet@kddemobank.test', status: 'Active' },
-  { username: 'auditor', password: 'Audit@123', fullName: 'Mahbub Alam', role: 'AUDITOR', branch: 'ALL', email: 'auditor@kddemobank.test', status: 'Active' },
-  { username: 'locked.user', password: 'Locked@123', fullName: 'Rashed Karim', role: 'CSO', branch: 'SYL', email: 'locked.user@kddemobank.test', status: 'Locked' },
+  { username: 'admin', password: 'Admin@123', fullName: 'Rahim Uddin', role: 'ADMIN', branch: 'ALL', email: 'admin@qademobank.test', status: 'Active' },
+  { username: 'manager.dhaka', password: 'Manager@123', fullName: 'Farhana Islam', role: 'BRANCH_MANAGER', branch: 'DHK', email: 'manager.dhaka@qademobank.test', status: 'Active' },
+  { username: 'manager.ctg', password: 'Manager@123', fullName: 'Tanvir Hossain', role: 'BRANCH_MANAGER', branch: 'CTG', email: 'manager.ctg@qademobank.test', status: 'Active' },
+  { username: 'manager.sylhet', password: 'Manager@123', fullName: 'Nusrat Jahan', role: 'BRANCH_MANAGER', branch: 'SYL', email: 'manager.sylhet@qademobank.test', status: 'Active' },
+  { username: 'cso.dhaka', password: 'Cso@123', fullName: 'Sabbir Ahmed', role: 'CSO', branch: 'DHK', email: 'cso.dhaka@qademobank.test', status: 'Active' },
+  { username: 'cso.ctg', password: 'Cso@123', fullName: 'Mitu Akter', role: 'CSO', branch: 'CTG', email: 'cso.ctg@qademobank.test', status: 'Active' },
+  { username: 'loan.dhaka', password: 'Loan@123', fullName: 'Imran Kabir', role: 'LOAN_OFFICER', branch: 'DHK', email: 'loan.dhaka@qademobank.test', status: 'Active' },
+  { username: 'loan.ctg', password: 'Loan@123', fullName: 'Arif Chowdhury', role: 'LOAN_OFFICER', branch: 'CTG', email: 'loan.ctg@qademobank.test', status: 'Active' },
+  { username: 'teller.dhaka', password: 'Teller@123', fullName: 'Shirin Sultana', role: 'TELLER', branch: 'DHK', email: 'teller.dhaka@qademobank.test', status: 'Active' },
+  { username: 'teller.sylhet', password: 'Teller@123', fullName: 'Kamal Uddin', role: 'TELLER', branch: 'SYL', email: 'teller.sylhet@qademobank.test', status: 'Active' },
+  { username: 'auditor', password: 'Audit@123', fullName: 'Mahbub Alam', role: 'AUDITOR', branch: 'ALL', email: 'auditor@qademobank.test', status: 'Active' },
+  { username: 'locked.user', password: 'Locked@123', fullName: 'Rashed Karim', role: 'CSO', branch: 'SYL', email: 'locked.user@qademobank.test', status: 'Locked' },
 ];
 
 const MAKER: Record<BranchCode, { cso: string; loan: string; teller: string; manager: string }> = {

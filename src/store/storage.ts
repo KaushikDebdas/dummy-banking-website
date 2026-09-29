@@ -57,7 +57,7 @@ export function parseBackup(text: string): { ok: true; state: BankState } | { ok
     return { ok: false, error: 'The file is not valid JSON.' };
   }
   const s = data as Partial<BankState> | null;
-  if (!s || typeof s !== 'object') return { ok: false, error: 'The file does not contain KD Demo Bank data.' };
+  if (!s || typeof s !== 'object') return { ok: false, error: 'The file does not contain QA Demo Bank data.' };
   if (s.version !== STATE_VERSION) return { ok: false, error: `Unsupported backup version (${String(s.version)}). Expected version ${STATE_VERSION}.` };
   const lists = ['users', 'customers', 'deposits', 'loans', 'transactions', 'auditLogs'] as const;
   const missing = lists.filter((k) => !Array.isArray(s[k]));

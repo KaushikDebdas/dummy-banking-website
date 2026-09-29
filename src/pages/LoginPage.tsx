@@ -53,7 +53,7 @@ export function LoginPage() {
             <LogoMark size={48} />
             <div>
               <h1 className="text-xl font-semibold tracking-tight text-slate-900" data-testid="login-title">
-                KD <span className="text-teal-700">Demo Bank</span>
+                QA <span className="text-teal-700">Demo Bank</span>
               </h1>
               <p className="text-xs text-slate-500">Sign in to the core banking simulator</p>
             </div>
